@@ -1,6 +1,6 @@
 import React, {useRef, useEffect, useState, Component} from 'react'
 import './App.css';
-import BarChart from './BarChart'
+import ZoomableLineChart from './ZoomableLineChart'
 import {select, axisBottom, axisRight, scaleLinear, scaleBand} from "d3"
 import { appl } from "./appl";
 
@@ -54,11 +54,9 @@ function App() {
   //   getData()
   // },[])
 
-  console.log(appl)
-
   return (
     <React.Fragment>
-    <BarChart data={appl}/>
+    <ZoomableLineChart data={appl} />
     </React.Fragment>
   );
 }
