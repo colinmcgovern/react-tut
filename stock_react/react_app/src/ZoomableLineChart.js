@@ -8,6 +8,7 @@ import {
   axisBottom,
   axisLeft,
   zoom,
+  scaleTime
 } from "d3";
 import useResizeObserver from "./useResizeObserver";
 
@@ -19,11 +20,17 @@ function ZoomableLineChart({ data, id = "myZoomableLineChart" }) {
   const [currentZoomState, setCurrentZoomState] = useState();
 
   //fixing raw stock data
-  var date_price = [];
+  var prices = [];
   data[0]["values"].forEach((v) => {
-    date_price.push(v["open"]);
+    prices.push(Number(v["open"]));
   });
-  date_price = date_price.reverse();
+  prices = prices.reverse();
+
+  var dates = [];
+  data[0]["values"].forEach((v) => {
+    dates.push(v["datetime"]);
+  });
+  dates = dates.reverse();
 
   useEffect(() => {
     const svg = select(svgRef.current);
@@ -32,8 +39,12 @@ function ZoomableLineChart({ data, id = "myZoomableLineChart" }) {
       dimensions || wrapperRef.current.getBoundingClientRect();
 
     // scales + line generator
-    const xScale = scaleLinear()
-      .domain([0, date_price.length - 1])
+    console.log(dates)
+    console.log(Date(dates[0]));
+    console.log(Date(dates[dates.length-1]));
+
+    const xScale = scaleTime()
+      .domain([Date.parse(dates[0]), Date.parse(dates[dates.length-1])])
       .range([10, width - 10]);
 
     if (currentZoomState) {
@@ -42,7 +53,7 @@ function ZoomableLineChart({ data, id = "myZoomableLineChart" }) {
     }
 
     const yScale = scaleLinear()
-      .domain([0, max(date_price)])
+      .domain([0, max(prices)])
       .range([height - 10, 10]);
 
     const lineGenerator = line()
@@ -53,7 +64,7 @@ function ZoomableLineChart({ data, id = "myZoomableLineChart" }) {
     // render the line
     svgContent
       .selectAll(".myLine")
-      .data([date_price])
+      .data([prices])
       .join("path")
       .attr("class", "myLine")
       .attr("stroke", "black")
@@ -62,12 +73,12 @@ function ZoomableLineChart({ data, id = "myZoomableLineChart" }) {
 
     svgContent
       .selectAll(".myDot")
-      .data(date_price)
+      .data(prices)
       .join("circle")
       .attr("class", "myDot")
       .attr("stroke", "black")
-      .attr("r", 4)
-      .attr("fill", "orange")
+      .attr("r", 1)
+      .attr("fill", "blue")
       .attr("cx", (value, index) => xScale(index))
       .attr("cy", yScale);
 
@@ -83,7 +94,7 @@ function ZoomableLineChart({ data, id = "myZoomableLineChart" }) {
 
     // zoom
     const zoomBehavior = zoom()
-      .scaleExtent([0.5, 5])
+      .scaleExtent([1, 500])
       .translateExtent([
         [0, 0],
         [width, height],
@@ -94,6 +105,7 @@ function ZoomableLineChart({ data, id = "myZoomableLineChart" }) {
       });
 
     svg.call(zoomBehavior);
+
   }, [currentZoomState, data, dimensions]);
 
   return (
